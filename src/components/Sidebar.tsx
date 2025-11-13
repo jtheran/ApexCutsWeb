@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ViewType } from '../App.tsx';
+import type { ViewType } from '../../App.tsx';
 
 interface SidebarProps {
   activeView: ViewType;
