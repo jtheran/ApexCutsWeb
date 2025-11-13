@@ -1,6 +1,5 @@
 import React from 'react';
-// Fix: Removed .tsx extension from import to fix module resolution error.
-import type { ViewType } from '../App';
+import type { ViewType } from '../App.tsx';
 
 interface SidebarProps {
   activeView: ViewType;
@@ -32,6 +31,41 @@ const NavItem: React.FC<{
   );
 };
 
+const BarberPoleIcon: React.FC<{className?: string}> = ({ className }) => (
+    <svg className={className} viewBox="0 0 100 250" xmlns="http://www.w3.org/2000/svg" fill="none">
+        <defs>
+            <linearGradient id="poleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="white"/>
+                <stop offset="100%" stopColor="#f0f0f0"/>
+            </linearGradient>
+            <clipPath id="cylinderClip">
+                <rect x="15" y="40" width="70" height="170" rx="5"/>
+            </clipPath>
+        </defs>
+
+        {/* Top Cap */}
+        <circle cx="50" cy="25" r="25" fill="url(#poleGradient)" stroke="#4A5568" strokeWidth="3"/>
+        <rect x="35" y="25" width="30" height="15" fill="url(#poleGradient)" stroke="#4A5568" strokeWidth="3" strokeLinejoin="round"/>
+
+        {/* Stripes */}
+        <g clipPath="url(#cylinderClip)">
+            <rect x="15" y="40" width="70" height="170" fill="white"/>
+            <path d="M -15 40 L 55 40 L 115 210 L 45 210 Z" fill="#D69E2E" />
+            <path d="M -45 100 L 25 100 L 85 270 L 15 270 Z" fill="#4A5568" />
+            <path d="M 55 40 L 125 40 L 65 210 L -5 210 Z" fill="#D69E2E" />
+        </g>
+
+        {/* Glass Tube and Border */}
+        <rect x="15" y="40" width="70" height="170" fill="transparent" stroke="#4A5568" strokeWidth="3" rx="5"/>
+        <rect x="15" y="40" width="70" height="170" fill="white" opacity="0.2" rx="5"/>
+        
+        {/* Bottom Cap */}
+        <rect x="15" y="210" width="70" height="10" fill="url(#poleGradient)" stroke="#4A5568" strokeWidth="3"/>
+        <circle cx="50" cy="235" r="15" fill="url(#poleGradient)" stroke="#4A5568" strokeWidth="3"/>
+    </svg>
+);
+
+
 const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isOpen, setIsOpen }) => {
     
   const icons = {
@@ -62,13 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isOpen, se
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-surface p-4 flex flex-col justify-between border-r border-gray-200 dark:border-gray-700 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out`}>
         <div>
           <div className="flex items-center mb-8 px-2">
-            <svg className="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 7L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 22V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M22 7L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M17 4.5L7 9.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <BarberPoleIcon className="w-8 h-auto"/>
             <h1 className="text-xl font-bold ml-2 text-gray-900 dark:text-on-surface">Apex Cuts</h1>
           </div>
           <nav className="space-y-2">

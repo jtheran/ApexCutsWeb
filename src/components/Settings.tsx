@@ -1,6 +1,5 @@
 import React from 'react';
-// Fix: Removed .tsx extension from import to fix module resolution error.
-import type { Theme } from '../App';
+import type { Theme } from '../App.tsx';
 
 interface SettingsProps {
   onLogout: () => void;

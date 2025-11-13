@@ -1,16 +1,18 @@
 import React, { useState, useMemo } from 'react';
+// Fix: Removed .ts extension from import to fix module resolution error.
 import type { Appointment, Service, Worker } from '../types';
 
 // Mock Data
 const workers: Worker[] = [
-  { id: 'w1', name: 'Carlos', specialty: 'Corte y Barba', avatarUrl: 'https://picsum.photos/seed/carlos/100', email: 'carlos@example.com', status: 'active' },
-  { id: 'w2', name: 'Sofia', specialty: 'Colorista', avatarUrl: 'https://picsum.photos/seed/sofia/100', email: 'sofia@example.com', status: 'active' },
-  { id: 'w3', name: 'Miguel', specialty: 'Corte Masculino', avatarUrl: 'https://picsum.photos/seed/miguel/100', email: 'miguel@example.com', status: 'inactive' },
+  { id: 'w1', name: 'Carlos Rodríguez', specialty: 'Cut & Shave', avatarUrl: 'https://picsum.photos/seed/carlos/100', email: 'carlos@example.com', status: 'active' },
+  { id: 'w2', name: 'Sofía Martínez', specialty: 'Colorist', avatarUrl: 'https://picsum.photos/seed/sofia/100', email: 'sofia@example.com', status: 'active' },
+  { id: 'w3', name: 'Miguel Torres', specialty: 'Men\'s Haircut', avatarUrl: 'https://picsum.photos/seed/miguel/100', email: 'miguel.t@example.com', status: 'inactive' },
+  { id: 'w4', name: 'Lucía Vargas', specialty: 'Stylist', avatarUrl: 'https://picsum.photos/seed/lucia/100', email: 'lucia.v@example.com', status: 'active' },
 ];
 const services: Service[] = [
-  { id: 's1', name: 'Haircut', duration: 30, price: 25, category: 'Cut' },
-  { id: 's2', name: 'Classic Shave', duration: 45, price: 30, category: 'Barba' },
-  { id: 's3', name: 'Hair Dye', duration: 90, price: 75, category: 'Color' },
+  { id: 's1', name: 'Haircut', duration: 30, price: 25, categoryId: 'sc1' },
+  { id: 's2', name: 'Classic Shave', duration: 45, price: 30, categoryId: 'sc2' },
+  { id: 's3', name: 'Hair Dye', duration: 90, price: 75, categoryId: 'sc3' },
 ];
 
 const getTodayAt = (hours: number, minutes: number = 0): Date => {
@@ -25,25 +27,36 @@ const appointments: Appointment[] = [
   { id: 'a3', clientName: 'Luis Fernández', serviceId: 's2', workerId: 'w1', startTime: getTodayAt(11, 0), endTime: getTodayAt(11, 45), status: 'completed' },
   { id: 'a4', clientName: 'Elena Rodríguez', serviceId: 's1', workerId: 'w2', startTime: getTodayAt(14, 0), endTime: getTodayAt(14, 30), status: 'cancelled' },
   { id: 'a5', clientName: 'Pedro Martín', serviceId: 's1', workerId: 'w1', startTime: getTodayAt(15, 0), endTime: getTodayAt(15, 30), status: 'confirmed' },
-  // Add appointments for other days for calendar view
-  { id: 'a6', clientName: 'Lucia Diaz', serviceId: 's1', workerId: 'w2', startTime: new Date(new Date().setDate(new Date().getDate() + 2)), endTime: new Date(new Date().setDate(new Date().getDate() + 2)), status: 'confirmed' },
+  { id: 'a6', clientName: 'Lucia Diaz', serviceId: 's1', workerId: 'w4', startTime: new Date(new Date().setDate(new Date().getDate() + 2)), endTime: new Date(new Date().setDate(new Date().getDate() + 2)), status: 'confirmed' },
   { id: 'a7', clientName: 'Marco Polo', serviceId: 's2', workerId: 'w1', startTime: new Date(new Date().setDate(new Date().getDate() - 3)), endTime: new Date(new Date().setDate(new Date().getDate() - 3)), status: 'completed' },
 ];
 
-const timeSlots = Array.from({ length: 22 }, (_, i) => `${(i / 2) + 9}:00`.split('.')[0] + (i % 2 === 0 ? ':00' : ':30'));
+const timeSlots = Array.from({ length: 22 }, (_, i) => {
+  const hour = Math.floor(i / 2) + 9;
+  const minute = i % 2 === 0 ? '00' : '30';
+  return `${hour}:${minute}`;
+});
 
 const statusColors = {
-  confirmed: 'bg-blue-500 border-blue-400',
-  completed: 'bg-green-500 border-green-400',
-  cancelled: 'bg-red-500 border-red-400',
+  confirmed: 'bg-blue-600/80 border-blue-500',
+  completed: 'bg-green-600/80 border-green-500',
+  cancelled: 'bg-red-600/80 border-red-500',
 };
 
 const Appointments: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [view, setView] = useState<'daily' | 'monthly'>('daily');
-  const [calendarDate, setCalendarDate] = useState(new Date()); // For month navigation in monthly view
+  const [calendarDate, setCalendarDate] = useState(new Date()); 
+  const [selectedWorkerId, setSelectedWorkerId] = useState<string | 'all'>('all');
 
   const activeWorkers = useMemo(() => workers.filter(w => w.status === 'active'), []);
+  
+  const workersToDisplay = useMemo(() => 
+    selectedWorkerId === 'all' 
+      ? activeWorkers 
+      : activeWorkers.filter(w => w.id === selectedWorkerId),
+    [selectedWorkerId, activeWorkers]
+  );
 
   const appointmentsByDate = useMemo(() => {
     const grouped = new Map<string, Appointment[]>();
@@ -76,54 +89,85 @@ const Appointments: React.FC = () => {
   const getServiceById = (serviceId: string) => services.find(s => s.id === serviceId);
 
   const renderDailyView = () => (
-    <div className="flex-1 overflow-auto bg-surface rounded-lg shadow-lg">
-      <div className="overflow-x-auto">
-        <div className="grid sticky top-0 bg-surface z-10" style={{ gridTemplateColumns: `6rem repeat(${activeWorkers.length}, minmax(140px, 1fr))` }}>
-          <div className="p-4 border-b border-r border-gray-700 text-on-surface-variant font-semibold">Time</div>
-          {activeWorkers.map(worker => (
-            <div key={worker.id} className="p-4 border-b border-r border-gray-700 text-center">
-              <img src={worker.avatarUrl} alt={worker.name} className="w-10 h-10 rounded-full mx-auto mb-2" />
-              <p className="font-semibold text-on-surface">{worker.name}</p>
-              <p className="text-xs text-on-surface-variant">{worker.specialty}</p>
-            </div>
-          ))}
-        </div>
-        
-        <div className="grid" style={{ gridTemplateColumns: `6rem repeat(${activeWorkers.length}, minmax(140px, 1fr))` }}>
-          {timeSlots.map(time => (
-            <React.Fragment key={time}>
-              <div className="flex items-center justify-center p-2 h-20 border-r border-b border-gray-700 text-on-surface-variant text-sm">
-                {time}
+    <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-shrink-0 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-sm font-semibold text-gray-500 dark:text-on-surface-variant mb-2">Filter by Staff</h3>
+          <div className="flex items-center gap-2 overflow-x-auto pb-2">
+              <button
+                  onClick={() => setSelectedWorkerId('all')}
+                  className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
+                      selectedWorkerId === 'all'
+                          ? 'bg-primary text-white'
+                          : 'bg-white dark:bg-surface text-gray-600 dark:text-on-surface-variant hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+              >
+                  All Staff
+              </button>
+              {activeWorkers.map(worker => (
+                  <button
+                      key={worker.id}
+                      onClick={() => setSelectedWorkerId(worker.id)}
+                      className={`flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors border-2 ${
+                          selectedWorkerId === worker.id
+                              ? 'bg-primary/20 border-primary text-gray-900 dark:text-on-surface'
+                              : 'bg-white dark:bg-surface border-transparent text-gray-600 dark:text-on-surface-variant hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}
+                  >
+                      <img src={worker.avatarUrl} alt={worker.name} className="w-7 h-7 rounded-full" />
+                      {worker.name}
+                  </button>
+              ))}
+          </div>
+      </div>
+      <div className="flex-1 overflow-auto bg-white dark:bg-surface rounded-lg shadow-lg">
+        <div className="overflow-x-auto">
+          <div className="grid sticky top-0 bg-white dark:bg-surface z-10" style={{ gridTemplateColumns: `6rem repeat(${workersToDisplay.length}, minmax(160px, 1fr))` }}>
+            <div className="p-4 border-b border-r border-gray-200 dark:border-gray-700 text-gray-500 dark:text-on-surface-variant font-semibold">Time</div>
+            {workersToDisplay.map(worker => (
+              <div key={worker.id} className="p-4 border-b border-r border-gray-200 dark:border-gray-700 text-center">
+                <img src={worker.avatarUrl} alt={worker.name} className="w-10 h-10 rounded-full mx-auto mb-2" />
+                <p className="font-semibold text-gray-900 dark:text-on-surface">{worker.name}</p>
+                <p className="text-xs text-gray-500 dark:text-on-surface-variant">{worker.specialty}</p>
               </div>
-              {activeWorkers.map(worker => {
-                const appointment = getAppointmentForSlot(worker.id, time);
-                const service = appointment ? getServiceById(appointment.serviceId) : null;
-                
-                const isFirstSlot = appointment && new Date(selectedDate).setHours(...(time.split(':').map(Number) as [number, number])) === appointment.startTime.getTime();
+            ))}
+          </div>
+          
+          <div className="grid" style={{ gridTemplateColumns: `6rem repeat(${workersToDisplay.length}, minmax(160px, 1fr))` }}>
+            {timeSlots.map(time => (
+              <React.Fragment key={time}>
+                <div className="flex items-center justify-center p-2 h-20 border-r border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-on-surface-variant text-sm">
+                  {time}
+                </div>
+                {workersToDisplay.map(worker => {
+                  const appointment = getAppointmentForSlot(worker.id, time);
+                  const service = appointment ? getServiceById(appointment.serviceId) : null;
+                  
+                  const isFirstSlot = appointment && new Date(selectedDate).setHours(...(time.split(':').map(Number) as [number, number])) === appointment.startTime.getTime();
 
-                if (isFirstSlot && appointment && service) {
-                  const durationInSlots = Math.ceil(service.duration / 30);
+                  if (isFirstSlot && appointment && service) {
+                    const durationInSlots = Math.ceil(service.duration / 30);
+                    return (
+                      <div key={`${worker.id}-${time}`} className="p-1 border-r border-b border-gray-200 dark:border-gray-700" style={{ gridRow: `span ${durationInSlots}` }}>
+                        <div className={`p-2 rounded-lg h-full flex flex-col justify-center text-white text-xs shadow-lg border-l-4 ${statusColors[appointment.status]}`}>
+                            <p className="font-bold">{appointment.clientName}</p>
+                            <p className="text-gray-200">{service.name}</p>
+                            <p className="text-gray-300 text-right mt-1 opacity-75">{appointment.startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {appointment.endTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  if (appointment && !isFirstSlot) {
+                      return null;
+                  }
+
                   return (
-                    <div key={`${worker.id}-${time}`} className="p-1 border-r border-b border-gray-700" style={{ gridRow: `span ${durationInSlots}` }}>
-                       <div className={`p-2 rounded-lg h-full flex flex-col justify-center text-white text-xs shadow-lg border-l-4 ${statusColors[appointment.status]}`}>
-                           <p className="font-bold">{appointment.clientName}</p>
-                           <p className="text-gray-200">{service.name}</p>
-                           <p className="text-gray-300 text-right mt-1 opacity-75">{appointment.startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {appointment.endTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                       </div>
-                    </div>
+                    <div key={`${worker.id}-${time}`} className="border-r border-b border-gray-200 dark:border-gray-700 h-20"></div>
                   );
-                }
-                
-                if (appointment && !isFirstSlot) {
-                    return null;
-                }
-
-                return (
-                  <div key={`${worker.id}-${time}`} className="border-r border-b border-gray-700 h-20"></div>
-                );
-              })}
-            </React.Fragment>
-          ))}
+                })}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -168,18 +212,18 @@ const Appointments: React.FC = () => {
     }
 
     return (
-      <div className="bg-surface rounded-lg shadow-lg p-4 flex-1 flex flex-col">
+      <div className="bg-white dark:bg-surface rounded-lg shadow-lg p-4 flex-1 flex flex-col">
         <div className="flex justify-between items-center mb-4 px-2">
-            <button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-gray-700 transition-colors">
-                <svg className="w-6 h-6 text-on-surface-variant" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            <button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <svg className="w-6 h-6 text-gray-500 dark:text-on-surface-variant" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
-            <h2 className="text-xl font-semibold text-on-surface">{`${monthNames[month]} ${year}`}</h2>
-            <button onClick={() => changeMonth(1)} className="p-2 rounded-full hover:bg-gray-700 transition-colors">
-                <svg className="w-6 h-6 text-on-surface-variant" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-on-surface">{`${monthNames[month]} ${year}`}</h2>
+            <button onClick={() => changeMonth(1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <svg className="w-6 h-6 text-gray-500 dark:text-on-surface-variant" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </button>
         </div>
         <div className="grid grid-cols-7 gap-1 flex-1">
-          {daysOfWeek.map(day => <div key={day} className="text-center font-semibold text-on-surface-variant text-xs py-2">{day}</div>)}
+          {daysOfWeek.map(day => <div key={day} className="text-center font-semibold text-gray-500 dark:text-on-surface-variant text-xs py-2">{day}</div>)}
           {calendarGrid.map((item, index) => {
               const dateKey = item.date.toISOString().split('T')[0];
               const dailyAppointments = appointmentsByDate.get(dateKey) || [];
@@ -190,7 +234,7 @@ const Appointments: React.FC = () => {
                     key={index} 
                     onClick={() => handleDayClick(item.date)} 
                     className={`relative p-1 md:p-2 text-center rounded-lg transition-colors h-full w-full flex flex-col justify-start items-center ${
-                      item.isCurrentMonth ? 'hover:bg-gray-700' : 'text-on-surface-variant/40'
+                      item.isCurrentMonth ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : 'text-gray-500/40 dark:text-on-surface-variant/40'
                     }`}
                     disabled={!item.isCurrentMonth}
                   >
@@ -212,19 +256,19 @@ const Appointments: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 lg:p-8 h-full flex flex-col">
-      <div className="flex flex-col items-start gap-4 md:flex-row md:items-center justify-between mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-on-surface">Appointments</h1>
+      <div className="flex-shrink-0 flex flex-col items-start gap-4 md:flex-row md:items-center justify-between mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-on-surface">Appointments</h1>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
-            <div className="bg-surface p-1 rounded-lg flex space-x-1 border border-gray-700">
+            <div className="bg-white dark:bg-surface p-1 rounded-lg flex space-x-1 border border-gray-200 dark:border-gray-700">
                 <button 
                     onClick={() => setView('monthly')} 
-                    className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors w-1/2 sm:w-auto ${view === 'monthly' ? 'bg-primary text-white' : 'text-on-surface-variant hover:bg-gray-700'}`}
+                    className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors w-1/2 sm:w-auto ${view === 'monthly' ? 'bg-primary text-white' : 'text-gray-600 dark:text-on-surface-variant hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                 >
                     Monthly
                 </button>
                 <button 
                     onClick={() => setView('daily')} 
-                    className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors w-1/2 sm:w-auto ${view === 'daily' ? 'bg-primary text-white' : 'text-on-surface-variant hover:bg-gray-700'}`}
+                    className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors w-1/2 sm:w-auto ${view === 'daily' ? 'bg-primary text-white' : 'text-gray-600 dark:text-on-surface-variant hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                 >
                     Daily
                 </button>
@@ -234,7 +278,7 @@ const Appointments: React.FC = () => {
                 type="date" 
                 value={selectedDate.toISOString().split('T')[0]}
                 onChange={(e) => setSelectedDate(e.target.valueAsDate || new Date())}
-                className="bg-surface p-2 rounded-lg border border-gray-600 focus:ring-primary focus:border-primary text-on-surface-variant"
+                className="bg-white dark:bg-surface p-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-primary focus:border-primary text-gray-500 dark:text-on-surface-variant"
               />
             )}
             <button className="bg-primary text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-amber-600 transition-colors">
@@ -243,7 +287,9 @@ const Appointments: React.FC = () => {
         </div>
       </div>
 
-      {view === 'monthly' ? renderMonthlyView() : renderDailyView()}
+      <div className="flex-1 min-h-0">
+        {view === 'monthly' ? renderMonthlyView() : renderDailyView()}
+      </div>
     </div>
   );
 };

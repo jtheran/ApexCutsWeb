@@ -1,7 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-// Fix: Removed .ts extension from import to fix module resolution error.
-import type { Worker, Appointment, Service } from '../types';
+import type { Worker, Appointment, Service } from '../types.ts';
 
 // --- Mock Data ---
 // Added comprehensive mock data to power the new stats components.
