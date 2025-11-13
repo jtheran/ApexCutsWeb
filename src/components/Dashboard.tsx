@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import type { Worker, Appointment, Service } from '../types.ts';
+import type { Worker, Appointment, Service } from '../../types.ts';
 
 // --- Mock Data ---
 // Added comprehensive mock data to power the new stats components.

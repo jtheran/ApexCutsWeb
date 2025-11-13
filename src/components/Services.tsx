@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Service, Category } from '../types.ts';
+import type { Service, Category } from '../../types.ts';
 
 const initialServices: Service[] = [
   { id: 's1', name: 'Haircut', categoryId: 'sc1', duration: 30, price: 25.00 },

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { Product, Category } from '../types.ts';
+import type { Product, Category } from '../../types.ts';
 
 const mockProductCategories: Category[] = [
   { id: 'pc1', name: 'Hair Styling', type: 'product' },

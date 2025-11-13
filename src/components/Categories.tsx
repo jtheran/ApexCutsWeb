@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { Category, Service, Product } from '../types.ts';
+import type { Category, Service, Product } from '../../types.ts';
 
 // Mock Data from other components for context
 const mockServices: Service[] = [

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { Appointment, Service, Worker } from '../types.ts';
+import type { Appointment, Service, Worker } from '../../types.ts';
 
 // Mock Data
 const workers: Worker[] = [

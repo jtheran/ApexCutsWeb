@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Notification } from '../types.ts';
+import type { Notification } from '../../types.ts';
 
 const initialNotifications: Notification[] = [
   { id: 'n1', title: 'New Appointment Booked', description: 'Juan Pérez has booked a "Haircut" for tomorrow at 10:00 AM with Carlos.', timestamp: new Date(Date.now() - 3600000 * 1), read: false },

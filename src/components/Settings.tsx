@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Theme } from '../App.tsx';
+import type { Theme } from '../../App.tsx';
 
 interface SettingsProps {
   onLogout: () => void;
